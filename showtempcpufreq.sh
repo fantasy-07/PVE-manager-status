@@ -236,35 +236,47 @@ cat > $contentforpvejs << 'EOF'
 		title: gettext('UPS'),
 		textField: 'ups',
 		renderer: function (v) {
-			if (!v || v.indexOf('NO_APCACCESS') !== -1) {
-				return '未检测到 apcupsd';
-			}
+		if (!v || v.indexOf('NO_APCACCESS') !== -1) {
+			return '未检测到 UPS';
+		}
 
-			let get = (k) => {
-				let m = v.match(new RegExp('^' + k + '\\s*:\\s*(.+)$', 'mi'));
-				return m ? m[1].trim() : '';
-			};
+		let get = (k) => {
+			let m = v.match(new RegExp('^' + k + '\\s*:\\s*(.+)$', 'mi'));
+			return m ? m[1].trim() : '';
+		};
 
-			let status  = get('STATUS');
-			let model   = get('MODEL');
-			let charge  = get('BCHARGE');
-			let load    = get('LOADPCT');
-			let runtime = get('TIMELEFT');
-			let linev   = get('LINEV');
-			let outputv = get('OUTPUTV');
-			let battv   = get('BATTV');
+		// 状态映射
+		let statusMap = {
+			'ONLINE': '市电',
+			'ONBATT': '电池',
+			'LOWBATT': '电量低',
+			'CHARGING': '充电中'
+		};
 
-			let s = [];
-			if (status)  s.push('状态: ' + status);
-			if (charge)  s.push('电量: ' + charge);
-			if (battv)   s.push('电池: ' + battv + 'V');
-			if (load)    s.push('负载: ' + load);
-			if (runtime) s.push('剩余: ' + runtime);
-			// if (linev)   s.push('输入: ' + linev + 'V');
-			if (outputv) s.push('输出: ' + outputv + 'V');
-			if (model)   s.push('型号: ' + model);			
+		let statusRaw = get('STATUS');
+		let status = statusMap[statusRaw] || statusRaw || '未知';
 
-			return s.join(' | ');
+		let charge  = get('BCHARGE');   // 82.0 Percent
+		let load    = get('LOADPCT');   // 12.0 Percent
+		let runtime = get('TIMELEFT');  // 21.2 Minutes
+		let battv   = get('BATTV');     // 13.1 Volts
+		let model   = get('MODEL');
+
+		// 格式化
+		if (charge)  charge  = charge.replace(/Percent/i, '%');
+		if (load)    load    = load.replace(/Percent/i, '%');
+		if (runtime) runtime = runtime.replace(/Minutes/i, '分');
+		if (battv)   battv   = battv.replace(/Volts?/i, 'V');
+
+		let s = [];
+		s.push('UPS 状态: ' + status);
+		if (charge)  s.push('电量: ' + charge);
+		if (battv)   s.push('电池: ' + battv);
+		if (load)    s.push('负载: ' + load);
+		if (runtime) s.push('剩余: ' + runtime);
+		if (model)   s.push('型号: ' + model);
+
+		return s.join(' | ');
 		}
 	},
 EOF
