@@ -260,7 +260,7 @@ cat > $contentforpvejs << 'EOF'
 			if (battv)   s.push('电池: ' + battv + 'V');
 			if (load)    s.push('负载: ' + load);
 			if (runtime) s.push('剩余: ' + runtime);
-			if (linev)   s.push('输入: ' + linev + 'V');
+			// if (linev)   s.push('输入: ' + linev + 'V');
 			if (outputv) s.push('输出: ' + outputv + 'V');
 			if (model)   s.push('型号: ' + model);			
 
