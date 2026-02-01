@@ -417,11 +417,12 @@ if $sODisksInfo;then
 		sdcr=/sys/block/$sdsn/queue/rotational
 		[ -f $sdcr ] || continue
 		
-		if [ "$(cat $sdcr)" = "0" ];then
-			hddisk=false
+		# 在循环中增加判断
+		if [[ "$(readlink -f /sys/class/block/$sdsn)" == *"usb"* ]]; then
+			sdtype="外部读卡器$sdi"
+		elif [ "$(cat $sdcr)" = "0" ]; then
 			sdtype="固态硬盘$sdi"
 		else
-			hddisk=true
 			sdtype="机械硬盘$sdi"
 		fi
 		
