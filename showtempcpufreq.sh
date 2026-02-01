@@ -252,15 +252,18 @@ cat > $contentforpvejs << 'EOF'
 			let runtime = get('TIMELEFT');
 			let linev   = get('LINEV');
 			let outputv = get('OUTPUTV');
+			let battv= get('BATTV');
 
 			let s = [];
 			if (status)  s.push('状态: ' + status);
 			if (charge)  s.push('电量: ' + charge);
+			if (battv)   s.push('电池: ' + battv + 'V');
 			if (load)    s.push('负载: ' + load);
 			if (runtime) s.push('剩余: ' + runtime);
 			if (linev)   s.push('输入: ' + linev + 'V');
 			if (outputv) s.push('输出: ' + outputv + 'V');
 			if (model)   s.push('型号: ' + model);
+			let battv= get('BATTV');
 
 			return s.join(' | ');
 		}
