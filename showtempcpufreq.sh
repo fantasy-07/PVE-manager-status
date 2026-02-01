@@ -125,6 +125,13 @@ $res->{cpuFreq} = `
 	[ -e /usr/sbin/turbostat ] && turbostat --quiet --cpu package --show "PkgWatt" -S sleep 0.25 2>&1 | tail -n1 
 
 `;
+$res->{ups} = `
+	if command -v apcaccess >/dev/null 2>&1; then
+		apcaccess status 2>/dev/null
+	else
+		echo "NO_APCACCESS"
+	fi
+`;
 EOF
 
 
@@ -220,6 +227,43 @@ cat > $contentforpvejs << 'EOF'
 			
 			return `${m2} | MAX: ${max} | MIN: ${min}${watt} | 调速器: ${gov}`
 		 }
+	},
+	//modbyshowtempfreq UPS
+	{
+		itemId: 'upsinfo',
+		colspan: 2,
+		printBar: false,
+		title: gettext('UPS'),
+		textField: 'ups',
+		renderer: function (v) {
+			if (!v || v.indexOf('NO_APCACCESS') !== -1) {
+				return '未检测到 apcupsd';
+			}
+
+			let get = (k) => {
+				let m = v.match(new RegExp('^' + k + '\\s*:\\s*(.+)$', 'mi'));
+				return m ? m[1].trim() : '';
+			};
+
+			let status  = get('STATUS');
+			let model   = get('MODEL');
+			let charge  = get('BCHARGE');
+			let load    = get('LOADPCT');
+			let runtime = get('TIMELEFT');
+			let linev   = get('LINEV');
+			let outputv = get('OUTPUTV');
+
+			let s = [];
+			if (status)  s.push('状态: ' + status);
+			if (charge)  s.push('电量: ' + charge);
+			if (load)    s.push('负载: ' + load);
+			if (runtime) s.push('剩余: ' + runtime);
+			if (linev)   s.push('输入: ' + linev + 'V');
+			if (outputv) s.push('输出: ' + outputv + 'V');
+			if (model)   s.push('型号: ' + model);
+
+			return s.join(' | ');
+		}
 	},
 EOF
 
