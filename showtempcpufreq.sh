@@ -276,9 +276,9 @@ cat > $contentforpvejs << 'EOF'
 		// 2. 处理连接方式
 		let conn = '未知';
 		if (/^net:/i.test(connRaw)) {
-			conn = '网络 (' + connRaw.replace(/^net:/i, '') + ')';
+			conn = connRaw.replace(/^net:/i, '');
 		} else if (/^local:/i.test(connRaw)) {
-			conn = '直连 (' + connRaw.replace(/^local:/i, '') + ')';
+			conn = connRaw.replace(/^local:/i, '');
 		}
 
 		// 3. 处理状态映射
@@ -298,7 +298,7 @@ cat > $contentforpvejs << 'EOF'
 		// 5. 格式化单位
 		let charge  = chargeRaw ? chargeRaw.replace(/Percent/i, '%') : '';
 		if (load)    load    = load.replace(/Percent/i, '%');
-		if (runtime) runtime = runtime.replace(/Minutes/i, '分');
+		if (runtime) runtime = runtime.replace(/Minutes/i, 'min');
 		if (battv)   battv   = battv.replace(/Volts?/i, 'V');
 
 		// 6. 组装显示数组
