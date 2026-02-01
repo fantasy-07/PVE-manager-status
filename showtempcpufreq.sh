@@ -306,6 +306,11 @@ cat > $contentforpvejs << 'EOF'
 		if (load)    s.push('负载: ' + load);
 		if (runtime) s.push('剩余: ' + runtime);
 		if (model)   s.push('型号: ' + model);
+
+		// === 调试：显示原始 upsconn ===
+		if (record && record.upsconn) {
+			s.push('[upsconn=' + record.upsconn + ']');
+		}
 	
 		return s.join(' | ');
 	}
