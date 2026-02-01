@@ -270,6 +270,9 @@ cat > $contentforpvejs << 'EOF'
 		let connRaw   = get('UPS_CONN');
 		let chargeVal = parseFloat(chargeRaw); 
 
+		// 使用正则去掉 "Back-UPS " 等前缀，只保留核心型号
+        let cleanModel = model.replace(/Back-UPS\s+/i, '');        
+
 		// 2. 处理连接方式
 		let conn = '未知';
 		if (/^net:/i.test(connRaw)) {
@@ -306,7 +309,7 @@ cat > $contentforpvejs << 'EOF'
 		if (battv)   s.push('电压: ' + battv);
 		if (load)    s.push('负载: ' + load);
 		if (runtime) s.push('剩余: ' + runtime);
-		if (model)   s.push('型号: ' + model);
+		if (cleanModel)  s.push('型号: ' + cleanModel);
 
 		return s.join(' | ');
 	}
@@ -388,7 +391,7 @@ EOF
 					}
 					
 					
-					let t = model + sn + temp + health + pot + rw + smart;
+					let t = model + temp + health + pot + rw + smart;
 					//console.log(t);
 					return t;
 				}catch(e){
