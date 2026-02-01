@@ -416,11 +416,16 @@ if $sODisksInfo;then
 		sdsn=$(awk -F '/' '{print $NF}' <<< $sd)
 		sdcr=/sys/block/$sdsn/queue/rotational
 		[ -f $sdcr ] || continue
-		
+				
 		# 在循环中增加判断
-		if [ "$(cat $sdcr)" = "0" ]; then
+		if [[ "$(readlink -f /sys/class/block/$sdsn)" == *"usb"* ]]; then
+			hddisk=false
+			sdtype="外部USB存储$sdi"
+		elif [ "$(cat $sdcr)" = "0" ]; then
+			hddisk=false
 			sdtype="固态硬盘$sdi"
 		else
+			hddisk=true
 			sdtype="机械硬盘$sdi"
 		fi
 		
