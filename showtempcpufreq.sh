@@ -126,28 +126,19 @@ $res->{cpuFreq} = `
 
 `;
 $res->{ups} = `
+	# 获取连接方式
+	if [ -f /etc/apcupsd/apcupsd.conf ]; then
+		conn=$(awk '/^UPSTYPE/ { t=$2 } /^DEVICE/  { d=$2 } END { if (t == "net" && d != "") print "net:" d; else if (t != "") print "local:" t; else print "unknown"; }' /etc/apcupsd/apcupsd.conf)
+	else
+		conn="unknown"
+	fi
+
 	if command -v apcaccess >/dev/null 2>&1; then
+		# 在 apcaccess 输出前注入一行自定义的连接信息
+		echo "UPS_CONN : $conn"
 		apcaccess status 2>/dev/null
 	else
 		echo "NO_APCACCESS"
-	fi
-`;
-$res->{upsconn} = `
-	if [ -f /etc/apcupsd/apcupsd.conf ]; then
-		awk '
-			/^UPSTYPE/ { t=$2 }
-			/^DEVICE/  { d=$2 }
-			END {
-				if (t == "net" && d != "")
-					print "net:" d;
-				else if (t != "")
-					print "local:" t;
-				else
-					print "unknown";
-			}
-		' /etc/apcupsd/apcupsd.conf
-	else
-		echo unknown
 	fi
 `;
 EOF
@@ -253,25 +244,26 @@ cat > $contentforpvejs << 'EOF'
 		printBar: false,
 		title: gettext('UPS'),
 		textField: 'ups',
-		renderer: function (v, meta, record) {
+		
+		renderer: function (v) {
 		if (!v || v.indexOf('NO_APCACCESS') !== -1) {
-			return '未检测到 UPS';
+        return '未检测到 UPS';
 		}
-	
+
 		let get = (k) => {
 			let m = v.match(new RegExp('^' + k + '\\s*:\\s*(.+)$', 'mi'));
 			return m ? m[1].trim() : '';
 		};
-	
-		// ===== UPS 连接方式（来自 Nodes.pm 的 upsconn）=====
-		let connRaw = record?.upsconn || '';
-	
+
+		// 从合并后的字符串中提取连接信息
+		let connRaw = get('UPS_CONN');
 		let conn = '未知';
 		if (/^net:/i.test(connRaw)) {
 			let ip = connRaw.replace(/^net:/i, '');
 			conn = '网络 (' + ip + ')';
 		} else if (/^local:/i.test(connRaw)) {
-			conn = '直连';
+			let type = connRaw.replace(/^local:/i, '');
+			conn = '直连 (' + type + ')';
 		}
 	
 		// ===== 状态映射 =====
@@ -305,11 +297,6 @@ cat > $contentforpvejs << 'EOF'
 		if (load)    s.push('负载: ' + load);
 		if (runtime) s.push('剩余: ' + runtime);
 		if (model)   s.push('型号: ' + model);
-
-		// === 调试：显示原始 upsconn ===
-		if (record && record.upsconn) {
-			s.push('[upsconn=' + record.upsconn + ']');
-		}
 	
 		return s.join(' | ');
 	}
