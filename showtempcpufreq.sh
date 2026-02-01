@@ -132,6 +132,24 @@ $res->{ups} = `
 		echo "NO_APCACCESS"
 	fi
 `;
+$res->{upsconn} = `
+	if [ -f /etc/apcupsd/apcupsd.conf ]; then
+		awk '
+			/^UPSTYPE/ { t=$2 }
+			/^DEVICE/  { d=$2 }
+			END {
+				if (t == "net" && d != "")
+					print "net:" d;
+				else if (t != "")
+					print "local:" t;
+				else
+					print "unknown";
+			}
+		' /etc/apcupsd/apcupsd.conf
+	else
+		echo unknown
+	fi
+`;
 EOF
 
 
@@ -244,6 +262,17 @@ cat > $contentforpvejs << 'EOF'
 			let m = v.match(new RegExp('^' + k + '\\s*:\\s*(.+)$', 'mi'));
 			return m ? m[1].trim() : '';
 		};
+		
+		// ups连接状态 网络或USB
+		let connRaw = record.upsconn || '';
+
+		let conn = '未知';
+		if (/^net:/i.test(connRaw)) {
+			let ip = connRaw.replace(/^net:/i, '');
+			conn = '网络 (' + ip + ')';
+		} else if (/^local:/i.test(connRaw)) {
+			conn = '直连';
+		}
 
 		// 状态映射
 		let statusMap = {
@@ -269,7 +298,8 @@ cat > $contentforpvejs << 'EOF'
 		if (battv)   battv   = battv.replace(/Volts?/i, 'V');
 
 		let s = [];
-		s.push('UPS 状态: ' + status);		
+		s.push('UPS 状态: ' + status);
+		s.push('连接: ' + conn);
 		if (charge)  s.push('电量: ' + charge);
 		if (battv)   s.push('电池: ' + battv);
 		if (load)    s.push('负载: ' + load);
