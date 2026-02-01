@@ -279,8 +279,19 @@ cat > $contentforpvejs << 'EOF'
 			'CHARGING': '充电中'
 		};
 	
+		// 在你的 pvemanagerlib.js renderer 函数中修改状态映射部分
 		let statusRaw = get('STATUS');
+		let charge = get('BCHARGE'); 
+		let chargeVal = parseFloat(charge); // 提取数字部分
+
 		let status = statusMap[statusRaw] || statusRaw || '未知';
+
+		// 逻辑判断：如果市电正常且电量不满，标记为充电中
+		if (statusRaw === 'ONLINE' && chargeVal < 100) {
+			status += ' (充电中)';
+		} else if (statusRaw === 'CHARGING') {
+			status = '充电中';
+		}
 	
 		let charge  = get('BCHARGE');
 		let load    = get('LOADPCT');
