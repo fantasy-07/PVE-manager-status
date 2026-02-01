@@ -433,7 +433,7 @@ if $sODisksInfo;then
 	\$res->{sd$sdi} = \`
 		if [ -b $sd ];then
 			if $hddisk && hdparm -C $sd | grep -iq 'standby';then
-				echo '{"standy": true}'
+				echo '{"standby": true}'
 			else
 				smartctl $sd -a -j
 			fi
@@ -455,8 +455,15 @@ EOF
 				try{
 					let  v = JSON.parse(value);
 					console.log(v)
-					if (v.standy === true) {
-						return '休眠中'
+					
+					// 如果 v.standby 是 true，但没有 model_name（读卡器报错拿不到型号）
+					// 那么我们就返回 null，让这一行彻底不显示
+					if (v.standby === true && !v.model_name) {
+						return null; 
+					}
+					// 正常的休眠显示（针对有型号的真实硬盘）
+					if (v.standby === true) {
+						return '休眠中';
 					}
 					
 					//名字
