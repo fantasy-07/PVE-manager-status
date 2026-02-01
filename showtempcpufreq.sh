@@ -418,9 +418,7 @@ if $sODisksInfo;then
 		[ -f $sdcr ] || continue
 		
 		# 在循环中增加判断
-		if [[ "$(readlink -f /sys/class/block/$sdsn)" == *"usb"* ]]; then
-			sdtype="外部USB存储$sdi"
-		elif [ "$(cat $sdcr)" = "0" ]; then
+		if [ "$(cat $sdcr)" = "0" ]; then
 			sdtype="固态硬盘$sdi"
 		else
 			sdtype="机械硬盘$sdi"
